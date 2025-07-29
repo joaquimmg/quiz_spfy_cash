@@ -1,0 +1,835 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SpotifyCash - Pesquisas com Recompensas</title>
+    <style>
+        /* Reset e Estilos Globais */
+        :root {
+            --spotify-green: #1DB954;
+            --spotify-black: #191414;
+            --spotify-white: #FFFFFF;
+            --spotify-dark-gray: #121212;
+            --spotify-gray: #282828;
+            --spotify-light-gray: #535353;
+            --spotify-text: #FFFFFF;
+            --spotify-text-secondary: #B3B3B3;
+            --spotify-font: 'Circular', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: var(--spotify-font);
+            background-color: var(--spotify-black);
+            color: var(--spotify-text);
+            line-height: 1.5;
+            overflow-x: hidden;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* Container Principal */
+        .spotify-container {
+            max-width: 100%;
+            min-height: 100vh;
+            margin: 0 auto;
+            background-color: var(--spotify-black);
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Passos/Telas */
+        .spotify-step {
+            min-height: 100vh;
+            display: none;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: 16px;
+            position: relative;
+            background-color: var(--spotify-dark-gray);
+            background: linear-gradient(135deg, var(--spotify-gray) 0%, var(--spotify-black) 100%);
+        }
+
+        .spotify-step.active {
+            display: flex;
+        }
+
+        .spotify-content {
+            max-width: 500px;
+            margin: 0 auto;
+            width: 100%;
+            padding: 20px 0;
+            position: relative;
+            z-index: 2;
+        }
+
+        /* Cabeçalhos e Textos */
+        h1, h2, h3 {
+            color: var(--spotify-white);
+            text-align: center;
+            margin-bottom: 16px;
+            font-weight: 700;
+        }
+
+        h1 {
+            font-size: 28px;
+            line-height: 1.2;
+            margin-bottom: 24px;
+        }
+
+        h2 {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 20px;
+            color: var(--spotify-text-secondary);
+        }
+
+        p {
+            font-size: 16px;
+            margin-bottom: 20px;
+            text-align: center;
+            color: var(--spotify-text-secondary);
+        }
+
+        /* Barra de Progresso */
+        .progress-container {
+            width: 100%;
+            margin: 20px 0;
+            text-align: center;
+        }
+
+        .progress-info {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            font-size: 14px;
+            color: var(--spotify-text-secondary);
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 6px;
+            background-color: var(--spotify-light-gray);
+            border-radius: 3px;
+            overflow: hidden;
+        }
+
+        .progress {
+            height: 100%;
+            background-color: var(--spotify-green);
+            border-radius: 3px;
+            transition: width 0.5s ease;
+            width: 0%;
+        }
+
+        /* Display de Saldo */
+        .balance-display {
+            background: var(--spotify-gray);
+            border-radius: 8px;
+            padding: 16px;
+            margin: 0 auto 24px;
+            display: flex;
+            align-items: center;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            position: relative;
+            overflow: hidden;
+            max-width: 90%;
+        }
+
+        .balance-display img {
+            width: 50px;
+            height: 50px;
+            margin-right: 16px;
+            border-radius: 8px;
+            object-fit: cover;
+        }
+
+        .balance-counter {
+            flex: 1;
+        }
+
+        .balance-counter div:first-child {
+            font-size: 14px;
+            color: var(--spotify-text-secondary);
+            margin-bottom: 4px;
+        }
+
+        .balance-counter div:last-child {
+            font-size: 28px;
+            font-weight: bold;
+            color: var(--spotify-white);
+        }
+
+        .counter {
+            color: var(--spotify-green);
+            font-weight: bold;
+        }
+
+        /* Botões */
+        .spotify-button {
+            background-color: var(--spotify-green);
+            color: var(--spotify-black);
+            border: none;
+            border-radius: 500px;
+            padding: 16px 32px;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            width: 100%;
+            margin: 12px 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            z-index: 1;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .spotify-button:hover {
+            transform: scale(1.03);
+            background-color: #1ed760;
+        }
+
+        .spotify-button:active {
+            transform: scale(0.98);
+        }
+
+        /* Botão especial com cor do balance-display */
+        .spotify-button.pulse {
+            background-color: var(--spotify-gray);
+            color: var(--spotify-white);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .spotify-button.pulse:hover {
+            background-color: var(--spotify-light-gray);
+        }
+
+        /* Botões de Opção */
+        .spotify-options {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin: 24px 0;
+            flex-wrap: wrap;
+        }
+
+        .spotify-option {
+            background: var(--spotify-gray);
+            border: none;
+            border-radius: 500px;
+            padding: 12px 24px;
+            font-size: 16px;
+            color: var(--spotify-text);
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .spotify-option:hover {
+            background: var(--spotify-light-gray);
+        }
+
+        .spotify-option.selected {
+            background: var(--spotify-green);
+            color: var(--spotify-black);
+            font-weight: bold;
+        }
+
+        /* Input de Email */
+        .email-input {
+            width: 100%;
+            padding: 16px;
+            margin-bottom: 20px;
+            background: var(--spotify-gray);
+            border: 1px solid var(--spotify-light-gray);
+            border-radius: 4px;
+            color: var(--spotify-text);
+            font-size: 16px;
+        }
+
+        .email-input:focus {
+            outline: none;
+            border-color: var(--spotify-green);
+        }
+
+        /* Efeitos Especiais */
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+
+        .pulse {
+            animation: pulse 2s infinite;
+        }
+
+        /* Efeito de Confetes */
+        .confetti {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            background-color: var(--spotify-green);
+            opacity: 0;
+            z-index: 1;
+        }
+
+        /* Animação do Contador */
+        @keyframes count-up {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .counter {
+            display: inline-block;
+            animation: count-up 0.5s ease-out forwards;
+        }
+
+        /* Efeito de Brilho */
+        .glow {
+            text-shadow: 0 0 10px rgba(29, 185, 84, 0.7);
+        }
+
+        /* Rodapé */
+        .footer {
+            text-align: center;
+            padding: 20px;
+            font-size: 12px;
+            color: var(--spotify-text-secondary);
+        }
+
+        /* Imagem do Artista */
+        .artist-image {
+            width: 150px;
+            height: 150px;
+            border-radius: 50%;
+            object-fit: cover;
+            margin: 20px auto;
+            display: block;
+            border: 3px solid var(--spotify-green);
+            box-shadow: 0 0 20px rgba(29, 185, 84, 0.5);
+        }
+
+        /* Badge de Verificação Spotify */
+        .verified-badge {
+            color: var(--spotify-green);
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+
+        .verified-badge svg {
+            margin-right: 5px;
+            fill: var(--spotify-green);
+        }
+
+        /* Novo: Efeito de Onda nos Botões */
+        .wave-effect {
+            position: absolute;
+            background: rgba(255, 255, 255, 0.4);
+            border-radius: 50%;
+            transform: scale(0);
+            pointer-events: none;
+            animation: wave 0.6s linear;
+        }
+
+        @keyframes wave {
+            to {
+                transform: scale(2);
+                opacity: 0;
+            }
+        }
+
+        /* Novo: Gradiente Dinâmico */
+        .gradient-bg {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, rgba(29, 185, 84, 0.1) 0%, rgba(18, 18, 18, 0.8) 100%);
+            z-index: 1;
+        }
+
+        /* Responsividade */
+        @media (max-width: 500px) {
+            h1 {
+                font-size: 24px;
+            }
+            
+            h2 {
+                font-size: 16px;
+            }
+            
+            .spotify-button {
+                padding: 14px 20px;
+                font-size: 16px;
+            }
+            
+            .spotify-option {
+                padding: 10px 16px;
+                font-size: 14px;
+            }
+            
+            .balance-display {
+                padding: 12px;
+            }
+            
+            .balance-display img {
+                width: 40px;
+                height: 40px;
+            }
+            
+            .balance-counter div:last-child {
+                font-size: 24px;
+            }
+            
+            .artist-image {
+                width: 120px;
+                height: 120px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="spotify-container">
+        <!-- Passo 1 - Login -->
+        <div class="spotify-step step step1 active">
+            <div class="gradient-bg"></div>
+            <div class="spotify-content">
+                <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/1/19/Spotify_logo_without_text.svg/2048px-Spotify_logo_without_text.svg.png" alt="Spotify Logo" style="width: 80px; height: 80px; margin: 0 auto 20px; display: block;">
+                
+                <div class="verified-badge">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24">
+                        <path d="M12 0c-6.627 0-12 5.373-12 12s5.373 12 12 12 12-5.373 12-12-5.373-12-12-12zm-1.25 17.292l-4.5-4.364 1.857-1.858 2.643 2.506 5.643-5.784 1.857 1.857-7.5 7.643z"/>
+                    </svg>
+                    VERIFICADO POR SPOTIFY
+                </div>
+                
+                <h1>Bem-vindo(a) ao Centro de Pesquisas do SpotifyCash!</h1>
+                <p>Participe em pesquisas rápidas e receba dinheiro no SpotifyCash para levantar quando quiser!</p>
+                
+                <input type="email" class="email-input" placeholder="Seu e-mail">
+                
+                <button class="spotify-button next-step">
+                    INICIAR PESQUISA
+                </button>
+                
+                <div class="footer">
+                    <p>© 2025 SpotifyCash</p>
+                    <p>Termos de Uso | Política de Privacidade</p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Passo 2 - Pesquisa Mr. Bow -->
+        <div class="spotify-step step step2">
+            <div class="gradient-bg"></div>
+            <div class="spotify-content">
+                <!-- Display de Saldo no topo -->
+                <div class="balance-display">
+                    <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/1/19/Spotify_logo_without_text.svg/2048px-Spotify_logo_without_text.svg.png" alt="Spotify Logo">
+                    <div class="balance-counter">
+                        <div>SEU SALDO ATUAL:</div>
+                        <div><span class="counter" data-to-value="0">0</span> MT</div>
+                    </div>
+                </div>
+                
+                <!-- Barra de Progresso -->
+                <div class="progress-container">
+                    <div class="progress-info">
+                        <span>Progresso: 1/4</span>
+                        <span>3000 MT ao completar</span>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress" style="width: 33%"></div>
+                    </div>
+                </div>
+                
+                <!-- Imagem do Artista -->
+                <img src="Mr-Bow-na-Rocha.webp" alt="Mr. Bow" class="artist-image">
+                
+                <h1>Responda e ganhe 500 MT!</h1>
+                
+                <h2>De 1 a 5, qual nota você daria para as músicas de Mr. Bow?</h2>
+                
+                <div class="spotify-options">
+                    <button class="spotify-option">1</button>
+                    <button class="spotify-option">2</button>
+                    <button class="spotify-option">3</button>
+                    <button class="spotify-option">4</button>
+                    <button class="spotify-option">5</button>
+                </div>
+                
+                <h2>Recomendaria o cantor Mr. Bow para seus amigos?</h2>
+                
+                <div class="spotify-options">
+                    <button class="spotify-option">Sim</button>
+                    <button class="spotify-option">Não</button>
+                </div>
+                
+                <button class="spotify-button next-step" id="next-survey-button">
+                    PRÓXIMA PESQUISA
+                </button>
+            </div>
+        </div>
+        
+        <!-- Passo 3 - Pesquisa Azagaia -->
+        <div class="spotify-step step step3">
+            <div class="gradient-bg"></div>
+            <div class="spotify-content">
+                <!-- Display de Saldo no topo -->
+                <div class="balance-display">
+                    <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/1/19/Spotify_logo_without_text.svg/2048px-Spotify_logo_without_text.svg.png" alt="Spotify Logo">
+                    <div class="balance-counter">
+                        <div>SEU SALDO ATUAL:</div>
+                        <div><span class="counter" data-to-value="500">500</span> MT</div>
+                    </div>
+                </div>
+                
+                <!-- Barra de Progresso -->
+                <div class="progress-container">
+                    <div class="progress-info">
+                        <span>Progresso: 2/4</span>
+                        <span>3000 MT ao completar</span>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress" style="width: 66%"></div>
+                    </div>
+                </div>
+                
+                <!-- Imagem do Artista -->
+                <img src="OIP (1).webp" alt="Azagaia" class="artist-image">
+                
+                <h1>Responda e ganhe 1000 MT!</h1>
+                
+                <h2>De 1 a 5, qual nota você daria para as músicas de Azagaia?</h2>
+                
+                <div class="spotify-options">
+                    <button class="spotify-option">1</button>
+                    <button class="spotify-option">2</button>
+                    <button class="spotify-option">3</button>
+                    <button class="spotify-option">4</button>
+                    <button class="spotify-option">5</button>
+                </div>
+                
+                <h2>Recomendaria o cantor Azagaia para seus amigos?</h2>
+                
+                <div class="spotify-options">
+                    <button class="spotify-option">Sim</button>
+                    <button class="spotify-option">Não</button>
+                </div>
+                
+                <button class="spotify-button next-step" id="next-survey-button-2">
+                    PRÓXIMA PESQUISA
+                </button>
+            </div>
+        </div>
+        
+        <!-- Passo 4 - Pesquisa Dama do Bling -->
+        <div class="spotify-step step step4">
+            <div class="gradient-bg"></div>
+            <div class="spotify-content">
+                <!-- Display de Saldo no topo -->
+                <div class="balance-display">
+                    <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/1/19/Spotify_logo_without_text.svg/2048px-Spotify_logo_without_text.svg.png" alt="Spotify Logo">
+                    <div class="balance-counter">
+                        <div>SEU SALDO ATUAL:</div>
+                        <div><span class="counter" data-to-value="1500">1500</span> MT</div>
+                    </div>
+                </div>
+                
+                <!-- Barra de Progresso -->
+                <div class="progress-container">
+                    <div class="progress-info">
+                        <span>Progresso: 3/4</span>
+                        <span>3000 MT ao completar</span>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress" style="width: 100%"></div>
+                    </div>
+                </div>
+                
+                <!-- Imagem do Artista -->
+                <img src="OIP.webp" alt="Dama do Bling" class="artist-image">
+                
+                <h1>Responda e ganhe 1500 MT!</h1>
+                
+                <h2>De 1 a 5, qual nota você daria para as músicas de Dama do Bling?</h2>
+                
+                <div class="spotify-options">
+                    <button class="spotify-option">1</button>
+                    <button class="spotify-option">2</button>
+                    <button class="spotify-option">3</button>
+                    <button class="spotify-option">4</button>
+                    <button class="spotify-option">5</button>
+                </div>
+                
+                <h2>Recomendaria a cantora Dama do Bling para seus amigos?</h2>
+                
+                <div class="spotify-options">
+                    <button class="spotify-option">Sim</button>
+                    <button class="spotify-option">Não</button>
+                </div>
+                
+                <button class="spotify-button next-step" id="next-survey-button-3">
+                    FINALIZAR PESQUISAS
+                </button>
+            </div>
+        </div>
+        
+        <!-- Passo 5 - Conclusão -->
+        <div class="spotify-step step step5">
+            <div class="gradient-bg"></div>
+            <div class="spotify-content">
+                <!-- Display de Saldo no topo -->
+                <div class="balance-display">
+                    <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/1/19/Spotify_logo_without_text.svg/2048px-Spotify_logo_without_text.svg.png" alt="Spotify Logo">
+                    <div class="balance-counter">
+                        <div>SEU SALDO ATUAL:</div>
+                        <div><span class="counter" data-to-value="3000">1500</span> MT</div>
+                    </div>
+                </div>
+                
+                <!-- Barra de Progresso -->
+                <div class="progress-container">
+                    <div class="progress-info">
+                        <span>Progresso: 4/4</span>
+                        <span>Parabéns! Você completou!</span>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress" style="width: 100%"></div>
+                    </div>
+                </div>
+                
+                <h1>🎉 Parabéns! 🎉</h1>
+                <h2>Você ganhou 3000 MT por completar as pesquisas!</h2>
+                
+                <p>Seu saldo total agora é de 3000 MT</p>
+                
+                <button class="spotify-button pulse">
+                    A SEGUIR, SERÁ APRESENTADA UMA AULA GRATUITA QUE ENSINA COMO RESGATAR AS RECOMPENSAS PELAS PESQUISAS QUE VOCÊ ACABOU DE COMPLETAR!
+                </button>
+                
+                <h2>Clique no botão abaixo para resgatar seu saldo! 👇</h2>
+                
+                <button class="spotify-button" id="withdraw-button">
+                    RESGATAR MEU SALDO AGORA
+                </button>
+                
+                <div class="footer">
+                    <p>© 2025 SpotifyCash </p>
+                    <p>Termos de Uso | Política de Privacidade</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Áudio para efeito sonoro -->
+    <audio id="cashSound" src="cash-register-kaching-sound-effect-125042.mp3" preload="auto"></audio>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            // Mostrar primeiro passo
+            const steps = document.querySelectorAll(".step");
+            let currentStep = 0;
+            
+            // Carregar efeito sonoro
+            const cashSound = document.getElementById("cashSound");
+            
+            // Adicionar efeito de onda aos botões
+            function createWaveEffect(event) {
+                const button = event.currentTarget;
+                const rect = button.getBoundingClientRect();
+                const x = event.clientX - rect.left;
+                const y = event.clientY - rect.top;
+                
+                const wave = document.createElement("span");
+                wave.className = "wave-effect";
+                wave.style.left = `${x}px`;
+                wave.style.top = `${y}px`;
+                
+                button.appendChild(wave);
+                
+                setTimeout(() => {
+                    wave.remove();
+                }, 600);
+            }
+            
+            // Adicionar efeito de onda a todos os botões
+            document.querySelectorAll(".spotify-button, .spotify-option").forEach(button => {
+                button.addEventListener("click", createWaveEffect);
+            });
+            
+            // Seleção de opções
+            document.querySelectorAll(".spotify-option").forEach(option => {
+                option.addEventListener("click", function() {
+                    // Remove a seleção de todos os botões no mesmo grupo
+                    const parent = this.parentElement;
+                    parent.querySelectorAll(".spotify-option").forEach(btn => {
+                        btn.classList.remove("selected");
+                    });
+                    
+                    // Seleciona o botão clicado
+                    this.classList.add("selected");
+                });
+            });
+            
+            function showStep(index) {
+                steps.forEach((step, i) => {
+                    step.style.display = i === index ? "flex" : "none";
+                });
+                
+                // Adicionar classe active para animação
+                steps.forEach(step => step.classList.remove("active"));
+                steps[index].classList.add("active");
+                
+                // Rolar para o topo com suavidade
+                window.scrollTo({
+                    top: 0,
+                    behavior: "smooth"
+                });
+                
+                // Criar confetes ao avançar (exceto no primeiro passo)
+                if (index > 0) {
+                    createConfetti();
+                }
+            }
+            
+            // Função para tocar som de dinheiro
+            function playCashSound() {
+                cashSound.currentTime = 0;
+                cashSound.play().catch(e => console.log("Não foi possível tocar o som: ", e));
+            }
+            
+            // Inicializar mostrando o primeiro passo
+            showStep(currentStep);
+            
+            // Event listeners para botões de próximo passo (sem som)
+            document.querySelectorAll(".next-step:not(#next-survey-button):not(#next-survey-button-2):not(#next-survey-button-3)").forEach(button => {
+                button.addEventListener("click", function() {
+                    if (currentStep < steps.length - 1) {
+                        currentStep++;
+                        showStep(currentStep);
+                    }
+                });
+            });
+            
+            // Botões de próxima pesquisa com som
+            document.getElementById("next-survey-button").addEventListener("click", function() {
+                playCashSound();
+                if (currentStep < steps.length - 1) {
+                    currentStep++;
+                    showStep(currentStep);
+                }
+            });
+            
+            document.getElementById("next-survey-button-2").addEventListener("click", function() {
+                playCashSound();
+                if (currentStep < steps.length - 1) {
+                    currentStep++;
+                    showStep(currentStep);
+                }
+            });
+            
+            document.getElementById("next-survey-button-3").addEventListener("click", function() {
+                playCashSound();
+                if (currentStep < steps.length - 1) {
+                    currentStep++;
+                    showStep(currentStep);
+                }
+            });
+            
+            // Configurar botão de saque (com seu link)
+            document.getElementById("withdraw-button").addEventListener("click", function() {
+                playCashSound();
+                // Substitua SEU_LINK_AQUI pelo seu link real
+                window.location.href = "https://www.soulmatesecrets.online/make-moneyy-pov";
+            });
+            
+            // Animar contadores
+            function animateCounters() {
+                const counters = document.querySelectorAll(".counter");
+                
+                counters.forEach(counter => {
+                    const target = +counter.getAttribute("data-to-value");
+                    const duration = 1500;
+                    const start = +counter.textContent || 0;
+                    const increment = target / (duration / 16);
+                    
+                    let current = start;
+                    const timer = setInterval(() => {
+                        current += increment;
+                        counter.textContent = Math.round(current);
+                        
+                        if (current >= target) {
+                            counter.textContent = target;
+                            clearInterval(timer);
+                            
+                            // Adicionar efeito de brilho quando completa
+                            counter.classList.add("glow");
+                            setTimeout(() => {
+                                counter.classList.remove("glow");
+                            }, 1000);
+                        }
+                    }, 16);
+                });
+            }
+            
+            // Criar efeito de confete
+            function createConfetti() {
+                const colors = ["#1DB954", "#1ed760", "#ffffff", "#b3b3b3"];
+                const container = document.querySelector(".step.active");
+                
+                for (let i = 0; i < 50; i++) {
+                    const confetti = document.createElement("div");
+                    confetti.className = "confetti";
+                    confetti.style.left = Math.random() * 100 + "vw";
+                    confetti.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+                    confetti.style.width = Math.random() * 10 + 5 + "px";
+                    confetti.style.height = confetti.style.width;
+                    confetti.style.opacity = Math.random() + 0.5;
+                    confetti.style.transform = `rotate(${Math.random() * 360}deg)`;
+                    
+                    container.appendChild(confetti);
+                    
+                    // Animação de queda
+                    const animation = confetti.animate([
+                        { transform: `translateY(-20px) rotate(0deg)`, opacity: 1 },
+                        { transform: `translateY(${window.innerHeight}px) rotate(${Math.random() * 360}deg)`, opacity: 0 }
+                    ], {
+                        duration: Math.random() * 3000 + 2000,
+                        easing: "cubic-bezier(0.1, 0.8, 0.3, 1)"
+                    });
+                    
+                    animation.onfinish = () => confetti.remove();
+                }
+            }
+            
+            // Iniciar animação dos contadores quando visíveis
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        animateCounters();
+                        observer.unobserve(entry.target);
+                    }
+                });
+            }, { threshold: 0.5 });
+            
+            document.querySelectorAll(".counter").forEach(counter => {
+                observer.observe(counter);
+            });
+        });
+    </script>
+</body>
+</html>
